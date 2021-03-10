@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>pl.touk</groupId>
+        <artifactId>nifi-extensions</artifactId>
+        <version>0.1</version>
+    </parent>
+
+    <artifactId>nifi-ignite-extensions</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <ignite.version>2.9.1</ignite.version>
+    </properties>
+
+    <modules>
+        <module>nifi-ignite-services</module>
+        <module>nifi-ignite-services-api</module>
+        <module>nifi-ignite-services-nar</module>
+        <module>nifi-ignite-services-api-nar</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.ignite</groupId>
+                <artifactId>ignite-core</artifactId>
+                <version>${ignite.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

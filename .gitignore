@@ -1,0 +1,12 @@
+.ammonite
+.idea/
+.metals/
+.bloop/
+.settings/
+.project
+.classpath
+.factorypath
+.vscode/
+.mvn/
+target/
+*.iml
