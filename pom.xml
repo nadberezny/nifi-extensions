@@ -3,6 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <properties>
         <nifi.version>1.12.1</nifi.version>
+        <nifi.groovy.version>2.5.6</nifi.groovy.version>
     </properties>
 
     <parent>
@@ -67,6 +68,11 @@
                         <source>1.8</source>
                         <target>1.8</target>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy-eclipse-batch</artifactId>
+                    <version>${nifi.groovy.version}-01</version>
                 </plugin>
             </plugins>
         </pluginManagement>
