@@ -11,7 +11,7 @@ TODO:
 1. Implement AtomicDistributedMapCacheClient<byte[]>
 2. Add support for DistributedMapCacheClient#removeByPattern
  */
-public class IgniteDistributedMapCacheClient extends AbstractIgniteCache<byte[], byte[]> implements DistributedMapCacheClient {
+public class IgniteDistributedMapCacheClient extends AbstractIgniteClientCache<byte[], byte[]> implements DistributedMapCacheClient {
 
     @Override
     public <K, V> boolean putIfAbsent(K key, V value, Serializer<K> keySerializer, Serializer<V> valueSerializer) throws IOException {

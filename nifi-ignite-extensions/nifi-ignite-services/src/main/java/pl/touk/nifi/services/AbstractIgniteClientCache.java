@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-public abstract class AbstractIgniteCache<K, V> extends AbstractIgniteThinClient {
+public abstract class AbstractIgniteClientCache<K, V> extends AbstractIgniteThinClient {
 
     protected static final PropertyDescriptor CACHE_NAME = new PropertyDescriptor.Builder()
             .displayName("Ignite Cache Name")
