@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class AbstractIgniteClient extends AbstractControllerService {
+public abstract class AbstractIgniteThinClient extends AbstractControllerService {
 
     public static final PropertyDescriptor SERVER_ADDRESSES = new PropertyDescriptor.Builder()
             .name("ignite-addresses")
