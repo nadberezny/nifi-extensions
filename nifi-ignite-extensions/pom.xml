@@ -20,6 +20,8 @@
         <module>nifi-ignite-services-api</module>
         <module>nifi-ignite-services-nar</module>
         <module>nifi-ignite-services-api-nar</module>
+        <module>nifi-ignite-processors</module>
+        <module>nifi-ignite-nar</module>
     </modules>
 
     <dependencyManagement>
