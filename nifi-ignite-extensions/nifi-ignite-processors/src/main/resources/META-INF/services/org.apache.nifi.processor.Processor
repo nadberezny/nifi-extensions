@@ -1,1 +1,1 @@
-pl.touk.processors.MyProcessor
+pl.touk.nifi.processors.PutIgniteRecord

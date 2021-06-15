@@ -17,6 +17,14 @@
     </properties>
 
     <dependencies>
+<!--        https://community.cloudera.com/t5/Support-Questions/How-to-use-one-of-nifi-standard-services-like-DBCPService-in/td-p/179077-->
+<!--        In order to keep the dependencies provided and use Services api in custom processors."-->
+        <dependency>
+            <groupId>pl.touk</groupId>
+            <artifactId>nifi-ignite-services-api-nar</artifactId>
+            <version>0.1</version>
+            <type>nar</type>
+        </dependency>
         <dependency>
             <groupId>pl.touk</groupId>
             <artifactId>nifi-ignite-processors</artifactId>

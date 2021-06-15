@@ -31,6 +31,16 @@
                 <artifactId>ignite-core</artifactId>
                 <version>${ignite.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.ignite</groupId>
+                <artifactId>ignite-indexing</artifactId>
+                <version>${ignite.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.nifi</groupId>
+                <artifactId>nifi-ignite-processors</artifactId>
+                <version>${nifi.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
