@@ -41,6 +41,12 @@
             <artifactId>nifi-record-serialization-service-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>pl.touk</groupId>
+            <artifactId>nifi-ignite-common</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-mock</artifactId>
             <scope>test</scope>

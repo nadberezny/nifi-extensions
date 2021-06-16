@@ -13,8 +13,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import pl.touk.nifi.utils.PortFinder;
-import pl.touk.nifi.utils.IgniteTestUtil;
+import pl.touk.nifi.ignite.testutil.IgniteTestUtil;
+import pl.touk.nifi.ignite.testutil.PortFinder;
 
 import java.io.IOException;
 import java.io.OutputStream;

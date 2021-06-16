@@ -1,4 +1,4 @@
-package pl.touk.nifi.utils;
+package pl.touk.nifi.ignite.testutil;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -6,12 +6,9 @@ import java.net.ServerSocket;
 public class PortFinder {
 
     public static int getAvailablePort() throws IOException {
-        ServerSocket socket = new ServerSocket(0);
-        try {
+        try(ServerSocket socket = new ServerSocket(0)) {
             socket.setReuseAddress(true);
             return socket.getLocalPort();
-        } finally {
-            socket.close();
         }
     }
 }

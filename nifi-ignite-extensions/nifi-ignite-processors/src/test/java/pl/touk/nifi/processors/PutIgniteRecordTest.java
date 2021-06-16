@@ -12,10 +12,11 @@ import org.apache.nifi.util.TestRunners;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import pl.touk.nifi.ignite.testutil.IgniteTestUtil;
+import pl.touk.nifi.ignite.testutil.PortFinder;
 
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,12 +24,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 public class PutIgniteRecordTest {
-    public static int getAvailablePort() throws IOException {
-        try(ServerSocket socket = new ServerSocket(0)) {
-            socket.setReuseAddress(true);
-            return socket.getLocalPort();
-        }
-    }
 
     private final Relationship success = new Relationship.Builder()
             .name("success")
@@ -66,7 +61,7 @@ public class PutIgniteRecordTest {
         runner.setProperty(PutIgniteRecord.RECORD_READER.getName(), "csv-reader");
         runner.setProperty(PutIgniteRecord.CACHE_NAME.getName(), "person");
         runner.setProperty(PutIgniteRecord.CACHE_KEY_TYPE.getName(), "person_key");
-        runner.setProperty(PutIgniteRecord.CACHE_VALUE_TYPE.getName(), "person");
+        runner.setProperty(PutIgniteRecord.CACHE_VALUE_TYPE.getName(), "person_value");
         runner.setProperty(PutIgniteRecord.KEY_FIELD_NAMES.getName(), "first_name,last_name");
     }
 
@@ -95,12 +90,12 @@ public class PutIgniteRecordTest {
     }
 
     private void setupIgnite() throws IOException, SQLException {
-        int ignitePort = getAvailablePort();
-        int clientConnectorPort = getAvailablePort();
+        int ignitePort = PortFinder.getAvailablePort();
+        int clientConnectorPort = PortFinder.getAvailablePort();
         ClientConnectorConfiguration clientConfiguration = new ClientConnectorConfiguration().setPort(clientConnectorPort);
         igniteServer = IgniteTestUtil.startServer(ignitePort, clientConfiguration);
 
         conn = DriverManager.getConnection("jdbc:ignite:thin://localhost:" + clientConnectorPort);
-        conn.prepareStatement("CREATE TABLE person (first_name VARCHAR, last_name VARCHAR, age INT, PRIMARY KEY (first_name, last_name)) WITH \"CACHE_NAME=person,KEY_TYPE=person_key,VALUE_TYPE=person\"").execute();
+        conn.prepareStatement("CREATE TABLE person (first_name VARCHAR, last_name VARCHAR, age INT, PRIMARY KEY (first_name, last_name)) WITH \"CACHE_NAME=person,KEY_TYPE=person_key,VALUE_TYPE=person_value\"").execute();
     }
 }

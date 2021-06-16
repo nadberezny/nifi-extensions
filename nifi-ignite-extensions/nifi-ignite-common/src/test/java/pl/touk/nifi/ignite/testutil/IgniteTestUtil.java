@@ -1,4 +1,4 @@
-package pl.touk.nifi.processors;
+package pl.touk.nifi.ignite.testutil;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -35,7 +35,6 @@ public class IgniteTestUtil {
     private static IgniteConfiguration getServerConfig(int port) {
         return new IgniteConfiguration()
                 .setIgniteInstanceName("my-server")
-//                .setCacheConfiguration(new CacheConfiguration().setSqlSchema("PUBLIC").setName("Person").setIndexedTypes(String.class, Person.class))
                 .setDiscoverySpi(getDiscoverSpi(port));
     }
 
