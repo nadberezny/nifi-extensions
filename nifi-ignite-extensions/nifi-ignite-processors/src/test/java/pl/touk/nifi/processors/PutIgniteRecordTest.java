@@ -61,7 +61,7 @@ public class PutIgniteRecordTest {
         runner.setProperty(PutIgniteRecord.RECORD_READER.getName(), "csv-reader");
         runner.setProperty(PutIgniteRecord.CACHE_NAME.getName(), "person");
         runner.setProperty(PutIgniteRecord.CACHE_KEY_TYPE.getName(), "person_key");
-        runner.setProperty(PutIgniteRecord.CACHE_VALUE_TYPE.getName(), "person_value");
+        runner.setProperty(PutIgniteRecord.CACHE_VALUE_TYPE.getName(), "person");
         runner.setProperty(PutIgniteRecord.KEY_FIELD_NAMES.getName(), "first_name,last_name");
     }
 
@@ -73,20 +73,46 @@ public class PutIgniteRecordTest {
 
     @Test
     public void testProcessor() throws SQLException {
-        String flowFileContent = "John;Doe;42;\n";
-        PreparedStatement query = conn.prepareStatement("SELECT * FROM person WHERE first_name = 'John' AND last_name = 'Doe'");
+        PreparedStatement queryAll = conn.prepareStatement("SELECT * FROM person");
+        PreparedStatement queryJohn = conn.prepareStatement("SELECT * FROM person WHERE first_name = 'John' AND last_name = 'Doe'");
+        PreparedStatement queryJane = conn.prepareStatement("SELECT * FROM person WHERE first_name = 'Jane' AND last_name = 'Doe'");
 
-        ResultSet resultBeforeRun = query.executeQuery();
+        ResultSet resultBeforeRun = queryAll.executeQuery();
         assertFalse(resultBeforeRun.next());
 
+        String flowFileContent = "John;Doe;42\nJane;Doe;35\n";
         runner.enqueue(flowFileContent, flowFileAttributes);
         runner.run(1);
         runner.assertAllFlowFilesTransferred(success, 1);
 
-        ResultSet resultAfterRun = query.executeQuery();
-        assert(resultAfterRun.next());
-        assertEquals(resultAfterRun.getString("first_name"), "John");
-        assertEquals(resultAfterRun.getInt("age"), 42);
+        ResultSet queryJohnResult1 = queryJohn.executeQuery();
+        assert(queryJohnResult1.next());
+        assertEquals(queryJohnResult1.getString("first_name"), "John");
+        assertEquals(queryJohnResult1.getInt("age"), 42);
+
+        ResultSet queryJaneResult1 = queryJane.executeQuery();
+        assert(queryJaneResult1.next());
+        assertEquals(queryJaneResult1.getString("first_name"), "Jane");
+        assertEquals(queryJaneResult1.getInt("age"), 35);
+
+        // When override is disabled it should not override cache entry
+        runner.setProperty(PutIgniteRecord.DATA_STREAMER_ALLOW_OVERRIDE, "false");
+        String johnAge43 = "John;Doe;43;\n";
+        runner.enqueue(johnAge43, flowFileAttributes);
+        runner.run(1);
+        runner.assertAllFlowFilesTransferred(success, 2);
+        ResultSet queryJohnResult2 = queryJohn.executeQuery();
+        assert(queryJohnResult2.next());
+        assertEquals(queryJohnResult2.getInt("age"), 42);
+
+        // When override is enabled it should override cache entry
+        runner.setProperty(PutIgniteRecord.DATA_STREAMER_ALLOW_OVERRIDE, "true");
+        runner.enqueue(johnAge43, flowFileAttributes);
+        runner.run(1);
+        runner.assertAllFlowFilesTransferred(success, 3);
+        ResultSet queryJohnResult3 = queryJohn.executeQuery();
+        assert(queryJohnResult3.next());
+        assertEquals(queryJohnResult3.getInt("age"), 43);
     }
 
     private void setupIgnite() throws IOException, SQLException {
@@ -96,6 +122,6 @@ public class PutIgniteRecordTest {
         igniteServer = IgniteTestUtil.startServer(ignitePort, clientConfiguration);
 
         conn = DriverManager.getConnection("jdbc:ignite:thin://localhost:" + clientConnectorPort);
-        conn.prepareStatement("CREATE TABLE person (first_name VARCHAR, last_name VARCHAR, age INT, PRIMARY KEY (first_name, last_name)) WITH \"CACHE_NAME=person,KEY_TYPE=person_key,VALUE_TYPE=person_value\"").execute();
+        conn.prepareStatement("CREATE TABLE person (first_name VARCHAR, last_name VARCHAR, age INT, PRIMARY KEY (first_name, last_name)) WITH \"CACHE_NAME=person,KEY_TYPE=person_key,VALUE_TYPE=person\"").execute();
     }
 }
