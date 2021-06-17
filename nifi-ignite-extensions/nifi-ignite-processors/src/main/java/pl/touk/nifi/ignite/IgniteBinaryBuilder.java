@@ -22,18 +22,19 @@ public class IgniteBinaryBuilder {
     }
 
     public BinaryObject fromMapRecord(MapRecord record, String igniteTypeName, String[] fieldNamesIncluded) {
-        Map<String, Object> recordFields;
+        BinaryObjectBuilder builder = igniteBinary.builder(igniteTypeName);
+        getRecordFields(record, fieldNamesIncluded).forEach(builder::setField);
+        return builder.build();
+    }
+
+    private Map<String, Object> getRecordFields(MapRecord record, String[] fieldNamesIncluded) {
         if (fieldNamesIncluded == null)
-            recordFields = record.toMap();
+            return record.toMap();
         else {
-            recordFields = record.toMap().entrySet().stream().filter(recordEntry ->
+            return record.toMap().entrySet().stream().filter(recordEntry ->
                     Arrays.stream(fieldNamesIncluded).anyMatch(fieldName ->
                             recordEntry.getKey().equals(fieldName))
             ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
-
-        BinaryObjectBuilder builder = igniteBinary.builder(igniteTypeName);
-        recordFields.forEach(builder::setField);
-        return builder.build();
     }
 }
