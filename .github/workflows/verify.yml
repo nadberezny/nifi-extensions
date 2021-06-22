@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [ leader ]
+    branches-ignore:
+      - leader
   pull_request:
 
 jobs:
