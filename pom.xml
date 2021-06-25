@@ -68,6 +68,11 @@
                 <version>${nifi.version}</version>
             </dependency>
             <dependency>
+                <groupId>javax.cache</groupId>
+                <artifactId>cache-api</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-kerberos-credentials-service-api</artifactId>
                 <version>${nifi.version}</version>

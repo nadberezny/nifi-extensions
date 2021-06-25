@@ -38,6 +38,16 @@
                 <version>${ignite.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.ignite</groupId>
+                <artifactId>ignite-spring</artifactId>
+                <version>${ignite.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.ignite</groupId>
+                <artifactId>ignite-zookeeper</artifactId>
+                <version>${ignite.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.nifi</groupId>
                 <artifactId>nifi-ignite-processors</artifactId>
                 <version>${nifi.version}</version>

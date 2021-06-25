@@ -12,6 +12,11 @@
     <packaging>jar</packaging>
 
     <dependencies>
+<!--        NiFi uses geronimo-jcache_1.0_spec for JCache which is incompatible with Ignite's javax dependency-->
+        <dependency>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-api</artifactId>
@@ -39,6 +44,14 @@
         <dependency>
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-record-serialization-service-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-zookeeper</artifactId>
         </dependency>
         <dependency>
             <groupId>pl.touk</groupId>
