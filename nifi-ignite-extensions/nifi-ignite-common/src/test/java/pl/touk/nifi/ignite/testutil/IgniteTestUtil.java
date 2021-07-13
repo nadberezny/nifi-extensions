@@ -15,7 +15,8 @@ public class IgniteTestUtil {
         return Ignition.start(getServerConfig(port));
     }
 
-    public static Ignite startServer(int port, ClientConnectorConfiguration clientConnectorConfig) {
+    public static Ignite startServer(int port, int clientConnectorPort) {
+        ClientConnectorConfiguration clientConnectorConfig = new ClientConnectorConfiguration().setPort(clientConnectorPort);
         clientConnectorConfig.setPortRange(0);
         IgniteConfiguration serverConfig = getServerConfig(port)
                 .setClientConnectorConfiguration(clientConnectorConfig);

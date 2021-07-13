@@ -1,7 +1,6 @@
 package pl.touk.nifi.processors;
 
 import org.apache.ignite.Ignite;
-import org.apache.ignite.configuration.ClientConnectorConfiguration;
 import org.apache.nifi.csv.CSVReader;
 import org.apache.nifi.csv.CSVUtils;
 import org.apache.nifi.processor.Relationship;
@@ -11,17 +10,19 @@ import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import pl.touk.nifi.ignite.testutil.IgniteTestUtil;
 import pl.touk.nifi.ignite.testutil.PortFinder;
 
-
 import java.io.IOException;
 import java.sql.*;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class PutIgniteRecordTest {
 
@@ -31,18 +32,31 @@ public class PutIgniteRecordTest {
 
     private final String personCsvSchema =
             "{ \"type\": \"record\", \"name\": \"person\", \"fields\": " +
-                    "[ { \"name\": \"first_name\", \"type\": \"string\" }, { \"name\": \"last_name\", \"type\": \"string\" }, { \"name\": \"age\", \"type\": \"int\" } ] }";
+                    "[ { \"name\": \"first_name\", \"type\": \"string\" }, " +
+                      "{ \"name\": \"last_name\", \"type\": \"string\" }, " +
+                      "{ \"name\": \"birthday\", \"type\": {\n" +
+                      "    \"type\": \"long\",\n" +
+                      "    \"logicalType\": \"timestamp-millis\"\n" +
+                      "  }\n " +
+                      "}, " +
+                      "{ \"name\": \"age\", \"type\": \"int\" } ] }";
 
-    private Ignite igniteServer;
+    private static int ignitePort;
+    private static Ignite igniteServer;
+    private static int clientConnectorPort;
+
     private Connection conn;
+
     private TestRunner runner;
     private CSVReader csvReader;
     private Map<String, String> flowFileAttributes = new HashMap<>();
 
+    private PreparedStatement queryAll;
+    private PreparedStatement queryJohn;
+    private PreparedStatement queryJane;
+
     @Before
     public void before() throws InitializationException, IOException, SQLException {
-        setupIgnite();
-
         flowFileAttributes.put("csv.delimiter", ";");
         flowFileAttributes.put("csv.schema", personCsvSchema);
 
@@ -63,65 +77,90 @@ public class PutIgniteRecordTest {
         runner.setProperty(PutIgniteRecord.CACHE_KEY_TYPE.getName(), "person_key");
         runner.setProperty(PutIgniteRecord.CACHE_VALUE_TYPE.getName(), "person");
         runner.setProperty(PutIgniteRecord.KEY_FIELD_NAMES.getName(), "first_name,last_name");
+
+        conn = DriverManager.getConnection("jdbc:ignite:thin://localhost:" + clientConnectorPort);
+        conn.prepareStatement("CREATE TABLE IF NOT EXISTS person (first_name VARCHAR, last_name VARCHAR, birthday TIMESTAMP, age INT, PRIMARY KEY (first_name, last_name)) WITH \"CACHE_NAME=person,KEY_TYPE=person_key,VALUE_TYPE=person\"").execute();
+
+        queryAll = conn.prepareStatement("SELECT * FROM person");
+        queryJohn = conn.prepareStatement("SELECT * FROM person WHERE first_name = 'John' AND last_name = 'Doe'");
+        queryJane = conn.prepareStatement("SELECT * FROM person WHERE first_name = 'Jane' AND last_name = 'Doe'");
     }
 
     @After
     public void after() throws SQLException {
+        conn.prepareStatement("DELETE FROM person").execute();
         conn.close();
         igniteServer.close();
     }
 
     @Test
     public void testProcessor() throws SQLException {
-        PreparedStatement queryAll = conn.prepareStatement("SELECT * FROM person");
-        PreparedStatement queryJohn = conn.prepareStatement("SELECT * FROM person WHERE first_name = 'John' AND last_name = 'Doe'");
-        PreparedStatement queryJane = conn.prepareStatement("SELECT * FROM person WHERE first_name = 'Jane' AND last_name = 'Doe'");
-
         ResultSet resultBeforeRun = queryAll.executeQuery();
         assertFalse(resultBeforeRun.next());
 
-        String flowFileContent = "John;Doe;42\nJane;Doe;35\n";
+        String flowFileContent = "John;Doe;360720000;42\nJane;Doe;802483200;35\n";
         runner.enqueue(flowFileContent, flowFileAttributes);
         runner.run(1);
         runner.assertAllFlowFilesTransferred(success, 1);
 
-        ResultSet queryJohnResult1 = queryJohn.executeQuery();
-        assert(queryJohnResult1.next());
-        assertEquals(queryJohnResult1.getString("first_name"), "John");
-        assertEquals(queryJohnResult1.getInt("age"), 42);
+        Person john = selectPerson(queryJohn);
+        assertEquals(john.firstName, "John");
+        assertEquals(john.birthday, Timestamp.from(Instant.ofEpochMilli(360720000)));
+        assertEquals(john.age, 42);
 
-        ResultSet queryJaneResult1 = queryJane.executeQuery();
-        assert(queryJaneResult1.next());
-        assertEquals(queryJaneResult1.getString("first_name"), "Jane");
-        assertEquals(queryJaneResult1.getInt("age"), 35);
+        Person jane = selectPerson(queryJane);
+        assertEquals(jane.firstName, "Jane");
+        assertEquals(jane.birthday, Timestamp.from(Instant.ofEpochMilli(802483200)));
+        assertEquals(jane.age, 35);
 
         // When override is disabled it should not override cache entry
         runner.setProperty(PutIgniteRecord.DATA_STREAMER_ALLOW_OVERRIDE, "false");
-        String johnAge43 = "John;Doe;43;\n";
+        String johnAge43 = "John;Doe;329184000;43;\n";
         runner.enqueue(johnAge43, flowFileAttributes);
         runner.run(1);
         runner.assertAllFlowFilesTransferred(success, 2);
-        ResultSet queryJohnResult2 = queryJohn.executeQuery();
-        assert(queryJohnResult2.next());
-        assertEquals(queryJohnResult2.getInt("age"), 42);
+
+        Person sameJohn = selectPerson(queryJohn);
+        assertEquals(sameJohn.age, 42);
 
         // When override is enabled it should override cache entry
         runner.setProperty(PutIgniteRecord.DATA_STREAMER_ALLOW_OVERRIDE, "true");
         runner.enqueue(johnAge43, flowFileAttributes);
         runner.run(1);
         runner.assertAllFlowFilesTransferred(success, 3);
-        ResultSet queryJohnResult3 = queryJohn.executeQuery();
-        assert(queryJohnResult3.next());
-        assertEquals(queryJohnResult3.getInt("age"), 43);
+
+        Person updatedJohn = selectPerson(queryJohn);
+        assertEquals(updatedJohn.age, 43);
     }
 
-    private void setupIgnite() throws IOException, SQLException {
-        int ignitePort = PortFinder.getAvailablePort();
-        int clientConnectorPort = PortFinder.getAvailablePort();
-        ClientConnectorConfiguration clientConfiguration = new ClientConnectorConfiguration().setPort(clientConnectorPort);
-        igniteServer = IgniteTestUtil.startServer(ignitePort, clientConfiguration);
+    @BeforeClass
+    public static void setupIgnite() throws IOException {
+        ignitePort = PortFinder.getAvailablePort();
+        clientConnectorPort = PortFinder.getAvailablePort();
 
-        conn = DriverManager.getConnection("jdbc:ignite:thin://localhost:" + clientConnectorPort);
-        conn.prepareStatement("CREATE TABLE person (first_name VARCHAR, last_name VARCHAR, age INT, PRIMARY KEY (first_name, last_name)) WITH \"CACHE_NAME=person,KEY_TYPE=person_key,VALUE_TYPE=person\"").execute();
+        igniteServer = IgniteTestUtil.startServer(ignitePort, clientConnectorPort);
+    }
+
+    private Person selectPerson(PreparedStatement query) throws SQLException {
+        ResultSet resultSet = query.executeQuery();
+        assert(resultSet.next());
+        return new Person(
+                resultSet.getString("first_name"), resultSet.getString("last_name"),
+                resultSet.getTimestamp("birthday"), resultSet.getInt("age")
+        );
+    }
+
+    static class Person {
+        private final String firstName;
+        private final String lastName;
+        private final Timestamp birthday;
+        private final int age;
+
+        Person(String firstName, String lastName, Timestamp birthday, int age) {
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.birthday = birthday;
+            this.age = age;
+        }
     }
 }

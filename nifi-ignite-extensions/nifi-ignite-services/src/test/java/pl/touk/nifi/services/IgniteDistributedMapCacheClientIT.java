@@ -34,8 +34,7 @@ public class IgniteDistributedMapCacheClientIT {
     public void before() throws IOException, InitializationException {
         int ignitePort = PortFinder.getAvailablePort();
         int clientConnectorPort = PortFinder.getAvailablePort();
-        ClientConnectorConfiguration clientConfiguration = new ClientConnectorConfiguration().setPort(clientConnectorPort);
-        igniteServer = IgniteTestUtil.startServer(ignitePort, clientConfiguration);
+        igniteServer = IgniteTestUtil.startServer(ignitePort, clientConnectorPort);
 
         TestRunner runner = TestRunners.newTestRunner(TestDistributedMapCacheClientProcessor.class);
         service = new IgniteDistributedMapCacheClient();

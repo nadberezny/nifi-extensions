@@ -1,5 +1,6 @@
 package pl.touk.nifi.processors;
 
+import org.apache.ignite.IgniteClientDisconnectedException;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.ignite.IgniteDataStreamerTimeoutException;
 import org.apache.ignite.IgniteInterruptedException;
@@ -28,9 +29,6 @@ import pl.touk.nifi.ignite.IgniteBinaryBuilder;
 
 import javax.cache.CacheException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @EventDriven
 @SupportsBatching
@@ -88,14 +86,28 @@ public class PutIgniteRecord extends AbstractGenericIgniteCacheProcessor<BinaryO
             .sensitive(false)
             .build();
 
+    public static final PropertyDescriptor DATA_STREAMER_MAX_RETRIES_ON_FAILURE = new PropertyDescriptor.Builder()
+            .displayName("Data Streamer max retries on failure")
+            .name("data-streamer-max-retries-on-failure")
+            .description("Data Streamer max retry count in case of failure")
+            .defaultValue("5")
+            .required(false)
+            .addValidator(StandardValidators.createLongValidator(1, 100, true))
+            .sensitive(false)
+            .build();
+
     protected static final List<PropertyDescriptor> descriptors =
             Arrays.asList(IGNITE_CONFIGURATION_FILE,CACHE_NAME, CACHE_KEY_TYPE, CACHE_VALUE_TYPE,
                     RECORD_READER, KEY_FIELD_NAMES,
                     DATA_STREAMER_PER_NODE_PARALLEL_OPERATIONS,
                     DATA_STREAMER_PER_NODE_BUFFER_SIZE,
-                    DATA_STREAMER_AUTO_FLUSH_FREQUENCY,DATA_STREAMER_ALLOW_OVERRIDE);
+                    DATA_STREAMER_AUTO_FLUSH_FREQUENCY,
+                    DATA_STREAMER_ALLOW_OVERRIDE,
+                    DATA_STREAMER_MAX_RETRIES_ON_FAILURE);
 
     private transient IgniteDataStreamer<BinaryObject, BinaryObject> igniteDataStreamer;
+
+    private Integer maxRetries;
 
     @Override
     public List<PropertyDescriptor> getSupportedPropertyDescriptors() {
@@ -106,8 +118,13 @@ public class PutIgniteRecord extends AbstractGenericIgniteCacheProcessor<BinaryO
     public final void closeIgniteDataStreamer() {
         if (igniteDataStreamer != null) {
             getLogger().info("Closing ignite data streamer");
-            igniteDataStreamer.flush();
-            igniteDataStreamer = null;
+            try {
+                igniteDataStreamer.flush();
+            } catch (CacheException ex) {
+                getLogger().info("Exception while closing Ignite DataStreamer", ex);
+            } finally {
+                igniteDataStreamer = null;
+            }
         }
     }
 
@@ -123,18 +140,21 @@ public class PutIgniteRecord extends AbstractGenericIgniteCacheProcessor<BinaryO
 
     @OnScheduled
     public final void initializeIgniteDataStreamer(ProcessContext context) throws ProcessException {
+        getLogger().info("Initializing Ignite DataStreamer");
+
         super.initializeIgniteCache(context);
 
         if ( getIgniteDataStreamer() != null ) {
             return;
         }
 
-        getLogger().info("Creating Ignite Datastreamer");
+        getLogger().info("Creating Ignite DataStreamer");
         try {
             int perNodeParallelOperations = context.getProperty(DATA_STREAMER_PER_NODE_PARALLEL_OPERATIONS).asInteger();
             int perNodeBufferSize = context.getProperty(DATA_STREAMER_PER_NODE_BUFFER_SIZE).asInteger();
             int autoFlushFrequency = context.getProperty(DATA_STREAMER_AUTO_FLUSH_FREQUENCY).asInteger();
             boolean allowOverride = context.getProperty(DATA_STREAMER_ALLOW_OVERRIDE).asBoolean();
+            maxRetries = context.getProperty(DATA_STREAMER_MAX_RETRIES_ON_FAILURE).asInteger();
 
             igniteDataStreamer = getIgnite().dataStreamer(getIgniteCache().getName());
             igniteDataStreamer.perNodeBufferSize(perNodeBufferSize);
@@ -176,13 +196,24 @@ public class PutIgniteRecord extends AbstractGenericIgniteCacheProcessor<BinaryO
             }
         });
 
-        if (!cacheItems.isEmpty()) {
+        int retries = 0;
+
+        while (retries < maxRetries && !cacheItems.isEmpty()) {
             try {
                 IgniteFuture<?> futures = igniteDataStreamer.addData(cacheItems);
                 Object result = futures.get();
                 getLogger().trace("Result {} of addData", new Object[]{result});
+                cacheItems.clear();
                 session.getProvenanceReporter().send(flowFile, "ignite://cache/" + getIgniteCache().getName() + "/");
-            } catch (CacheException | IgniteInterruptedException | IllegalStateException | IgniteDataStreamerTimeoutException e) {
+            } catch (CacheException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof IgniteClientDisconnectedException) {
+                    getLogger().error("Ignite client disconnected, recreating DataStreamer", e);
+                    igniteDataStreamer = null;
+                    initializeIgniteDataStreamer(context);
+                    retries++;
+                }
+            } catch (IgniteInterruptedException | IllegalStateException | IgniteDataStreamerTimeoutException e) {
                 getLogger().error("Ignite cache write failure", e);
                 session.transfer(flowFile, REL_FAILURE);
                 context.yield();
