@@ -5,7 +5,7 @@
     <parent>
         <groupId>pl.touk</groupId>
         <artifactId>nifi-ignite-extensions</artifactId>
-        <version>0.2.0-SNAPSHOT</version>
+        <version>0.2.0</version>
     </parent>
 
     <artifactId>nifi-ignite-services</artifactId>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>pl.touk</groupId>
             <artifactId>nifi-ignite-services-api</artifactId>
-            <version>0.2.0-SNAPSHOT</version>
+            <version>0.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ignite</groupId>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>pl.touk</groupId>
             <artifactId>nifi-ignite-common</artifactId>
-            <type>test-jar</type>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -77,21 +77,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
