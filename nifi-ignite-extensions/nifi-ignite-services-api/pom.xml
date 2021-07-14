@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>nifi-ignite-services-api</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>

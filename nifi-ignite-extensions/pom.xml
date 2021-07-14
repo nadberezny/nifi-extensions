@@ -55,7 +55,7 @@
             <dependency>
                 <groupId>pl.touk</groupId>
                 <artifactId>nifi-ignite-common</artifactId>
-                <version>0.2.1-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
