@@ -18,7 +18,7 @@ services:
       - ignite
 
   ignite:
-    image: apacheignite/ignite:${IGNITE_VERSION-2.9.1}
+    image: apacheignite/ignite:${IGNITE_VERSION-2.10.0}
     container_name: nifi-ignite-extensions_ignite
     networks:
       - nifi-ignite-extensions_network
