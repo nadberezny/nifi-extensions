@@ -1,7 +1,9 @@
 package pl.touk.nifi.services;
 
 import org.apache.ignite.Ignite;
+import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.configuration.ClientConnectorConfiguration;
+import org.apache.ignite.internal.processors.cache.persistence.DataRegion;
 import org.apache.nifi.distributed.cache.client.Deserializer;
 import org.apache.nifi.distributed.cache.client.Serializer;
 import org.apache.nifi.distributed.cache.client.exception.DeserializationException;
@@ -41,6 +43,7 @@ public class IgniteDistributedMapCacheClientIT {
         runner.addControllerService("ignite-distributed-map-cache-client", service);
         runner.setProperty(service, IgniteDistributedMapCacheClient.SERVER_ADDRESSES, "localhost:" + clientConnectorPort);
         runner.setProperty(service, IgniteDistributedMapCacheClient.CACHE_NAME, CACHE_NAME);
+        runner.setProperty(service, IgniteDistributedMapCacheClient.BACKUPS, "0");
         runner.enableControllerService(service);
         runner.assertValid(service);
     }
