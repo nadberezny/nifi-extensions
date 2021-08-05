@@ -19,6 +19,7 @@ public class IgniteTestUtil {
         ClientConnectorConfiguration clientConnectorConfig = new ClientConnectorConfiguration().setPort(clientConnectorPort);
         clientConnectorConfig.setPortRange(0);
         IgniteConfiguration serverConfig = getServerConfig(port)
+                .setWorkDirectory("/tmp/nifi-extensions/test/work")
                 .setClientConnectorConfiguration(clientConnectorConfig);
 
         return Ignition.start(serverConfig);
