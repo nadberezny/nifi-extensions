@@ -1,3 +1,5 @@
 pl.touk.nifi.services.DatabaseRecordLookupService
 pl.touk.nifi.services.IgniteDistributedMapCacheClient
+pl.touk.nifi.services.IgniteBinaryKeyBinaryObjectStreamer
+pl.touk.nifi.services.IgniteThickClient
 pl.touk.nifi.dbcp.DBCPConnectionPool

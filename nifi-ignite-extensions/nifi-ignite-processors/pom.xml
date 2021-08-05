@@ -46,16 +46,18 @@
             <artifactId>nifi-record-serialization-service-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-spring</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.ignite</groupId>
-            <artifactId>ignite-zookeeper</artifactId>
+            <groupId>pl.touk</groupId>
+            <artifactId>nifi-ignite-services-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>pl.touk</groupId>
             <artifactId>nifi-ignite-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pl.touk</groupId>
+            <artifactId>nifi-ignite-services</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

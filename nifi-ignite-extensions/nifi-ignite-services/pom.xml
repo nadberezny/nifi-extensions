@@ -50,7 +50,6 @@
             <groupId>pl.touk</groupId>
             <artifactId>nifi-ignite-common</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.nifi</groupId>
