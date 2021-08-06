@@ -11,14 +11,34 @@
                 <property name="localPort" value="47500"/>
             </bean>
         </property>
-        <property name="dataStorageConfiguration">
-            <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
-                <property name="defaultDataRegionConfiguration">
-                    <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
-                        <property name="persistenceEnabled" value="true"/>
-                    </bean>
-                </property>
-            </bean>
+        <property name="cacheConfiguration">
+            <list>
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="name" value="city"/>
+                    <property name="sqlSchema" value="PUBLIC"/>
+                    <property name="sqlEscapeAll" value="false"/>
+                    <property name="queryEntities">
+                        <list>
+                            <bean class="org.apache.ignite.cache.QueryEntity">
+                                <property name="tableName" value="CITY"/>
+                                <property name="keyType" value="city_key"/>
+                                <property name="valueType" value="city_value"/>
+                                <property name="keyFields">
+                                    <set>
+                                        <value>CITY_ID</value>
+                                    </set>
+                                </property>
+                                <property name="fields">
+                                    <map>
+                                        <entry key="CITY_ID" value="java.lang.Long"/>
+                                        <entry key="CITY_NAME" value="java.lang.String"/>
+                                    </map>
+                                </property>
+                            </bean>
+                        </list>
+                    </property>
+                </bean>
+            </list>
         </property>
     </bean>
 </beans>

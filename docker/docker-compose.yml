@@ -12,8 +12,6 @@ services:
     volumes:
       - ./nifi/user:/opt/nifi/nifi-current/user
       - ./ignite:/opt/nifi/nifi-current/ignite
-      - ~/.m2/repository/org/apache/ignite/ignite-core/2.9.1/ignite-core-2.9.1.jar:/opt/nifi/nifi-current/user_lib/ignite-core-2.9.1.jar
-      - ~/.m2/repository/org/apache/ignite/ignite-spring/2.9.1/ignite-spring-2.9.1.jar:/opt/nifi/nifi-current/user_lib/ignite-spring-2.9.1.jar
     depends_on:
       - ignite
 
@@ -28,15 +26,10 @@ services:
       - 8080:8080
     volumes:
       - ./ignite:/user_config
-      - nifi-ignite-extensions_ignite_storage:/persistent_storage
     environment:
       - OPTION_LIBS=ignite-rest-http,ignite-indexing
-      - IGNITE_WORK_DIR=/persistent_storage
       - CONFIG_URI=file:///user_config/ignite-config.xml
 
 networks:
   nifi-ignite-extensions_network:
     attachable: true
-
-volumes:
-  nifi-ignite-extensions_ignite_storage:
