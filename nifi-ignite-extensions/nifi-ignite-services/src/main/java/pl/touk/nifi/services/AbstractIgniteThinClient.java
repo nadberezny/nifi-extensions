@@ -79,7 +79,7 @@ public abstract class AbstractIgniteThinClient extends AbstractControllerService
         }
         String[] hostAddresses = context.getProperty(SERVER_ADDRESSES).getValue().split(",");
         String username = context.getProperty(USERNAME).getValue();
-        String password = context.getProperty(USERNAME).getValue();
+        String password = context.getProperty(PASSWORD).getValue();
         synchronized (Ignition.class) {
             ClientConfiguration cfg = new ClientConfiguration().setAddresses(hostAddresses);
             if (username != null) {
